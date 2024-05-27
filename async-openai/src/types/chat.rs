@@ -826,13 +826,18 @@ pub struct ChatCompletionStreamOptions {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
-#[serde(rename_all = "snake_case")]
 pub enum FinishReason {
+    #[serde(rename = "stop", alias = "STOP")]
     Stop,
+    #[serde(rename = "length", alias = "LENGTH")]
     Length,
+    #[serde(rename = "tool_calls")]
     ToolCalls,
+    #[serde(rename = "content_filter")]
     ContentFilter,
+    #[serde(rename = "function_call")]
     FunctionCall,
+    #[serde(rename = "end_turn")]
     EndTurn,
 }
 
