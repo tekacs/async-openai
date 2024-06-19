@@ -829,6 +829,8 @@ pub struct ChatCompletionStreamOptions {
 pub enum FinishReason {
     #[serde(rename = "stop", alias = "STOP")]
     Stop,
+    #[serde(rename = "complete", alias = "COMPLETE")]
+    Complete,
     #[serde(rename = "length", alias = "LENGTH")]
     Length,
     #[serde(rename = "tool_calls")]
