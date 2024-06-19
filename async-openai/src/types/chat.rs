@@ -888,11 +888,11 @@ pub struct ChatChoice {
 #[derive(Debug, Deserialize, Clone, PartialEq, Serialize)]
 pub struct CreateChatCompletionResponse {
     /// A unique identifier for the chat completion.
-    pub id: String,
+    pub id: Option<String>,
     /// A list of chat completion choices. Can be more than one if `n` is greater than 1.
     pub choices: Vec<ChatChoice>,
     /// The Unix timestamp (in seconds) of when the chat completion was created.
-    pub created: u32,
+    pub created: Option<u32>,
     /// The model used for the chat completion.
     pub model: String,
     /// The service tier used for processing the request. This field is only included if the `service_tier` parameter is specified in the request.
