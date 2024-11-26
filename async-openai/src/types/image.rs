@@ -5,7 +5,7 @@ use crate::error::OpenAIError;
 
 use super::InputSource;
 
-#[derive(Default, Debug, Serialize, Clone, Copy, PartialEq)]
+#[derive(Default, Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
 pub enum ImageSize {
     #[serde(rename = "256x256")]
     S256x256,
@@ -20,7 +20,7 @@ pub enum ImageSize {
     S1024x1792,
 }
 
-#[derive(Default, Debug, Serialize, Clone, Copy, PartialEq)]
+#[derive(Default, Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
 pub enum DallE2ImageSize {
     #[serde(rename = "256x256")]
     S256x256,
@@ -31,16 +31,16 @@ pub enum DallE2ImageSize {
     S1024x1024,
 }
 
-#[derive(Debug, Serialize, Default, Clone, Copy, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Default, Clone, Copy, PartialEq)]
 #[serde(rename_all = "lowercase")]
-pub enum ResponseFormat {
+pub enum ImageResponseFormat {
     #[default]
     Url,
     #[serde(rename = "b64_json")]
     B64Json,
 }
 
-#[derive(Debug, Serialize, Default, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Default, Clone, PartialEq)]
 pub enum ImageModel {
     #[default]
     #[serde(rename = "dall-e-2")]
@@ -51,7 +51,7 @@ pub enum ImageModel {
     Other(String),
 }
 
-#[derive(Debug, Serialize, Default, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Default, Clone, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum ImageQuality {
     #[default]
@@ -59,7 +59,7 @@ pub enum ImageQuality {
     HD,
 }
 
-#[derive(Debug, Serialize, Default, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Default, Clone, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum ImageStyle {
     #[default]
@@ -67,7 +67,7 @@ pub enum ImageStyle {
     Natural,
 }
 
-#[derive(Debug, Clone, Serialize, Default, Builder, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, Builder, PartialEq)]
 #[builder(name = "CreateImageRequestArgs")]
 #[builder(pattern = "mutable")]
 #[builder(setter(into, strip_option), default)]
@@ -93,7 +93,7 @@ pub struct CreateImageRequest {
 
     /// The format in which the generated images are returned. Must be one of `url` or `b64_json`. URLs are only valid for 60 minutes after the image has been generated.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub response_format: Option<ResponseFormat>,
+    pub response_format: Option<ImageResponseFormat>,
 
     /// The size of the generated images. Must be one of `256x256`, `512x512`, or `1024x1024` for `dall-e-2`.
     /// Must be one of `1024x1024`, `1792x1024`, or `1024x1792` for `dall-e-3` models.
@@ -164,7 +164,7 @@ pub struct CreateImageEditRequest {
     pub size: Option<DallE2ImageSize>,
 
     /// The format in which the generated images are returned. Must be one of `url` or `b64_json`.
-    pub response_format: Option<ResponseFormat>,
+    pub response_format: Option<ImageResponseFormat>,
 
     /// A unique identifier representing your end-user, which will help OpenAI to monitor and detect abuse. [Learn more](https://platform.openai.com/docs/usage-policies/end-user-ids).
     pub user: Option<String>,
@@ -190,7 +190,7 @@ pub struct CreateImageVariationRequest {
     pub size: Option<DallE2ImageSize>,
 
     /// The format in which the generated images are returned. Must be one of `url` or `b64_json`.
-    pub response_format: Option<ResponseFormat>,
+    pub response_format: Option<ImageResponseFormat>,
 
     /// A unique identifier representing your end-user, which will help OpenAI to monitor and detect abuse. [Learn more](https://platform.openai.com/docs/usage-policies/end-user-ids).
     pub user: Option<String>,

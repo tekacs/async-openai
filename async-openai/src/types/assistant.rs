@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::error::OpenAIError;
 
-use super::{FunctionName, FunctionObject};
+use super::{FunctionName, FunctionObject, ResponseFormat};
 
 #[derive(Clone, Serialize, Debug, Deserialize, PartialEq, Default)]
 pub struct AssistantToolCodeInterpreterResources {
@@ -21,30 +21,63 @@ pub struct AssistantToolFileSearchResources {
 
 #[derive(Clone, Serialize, Debug, Deserialize, PartialEq)]
 pub struct AssistantToolResources {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub code_interpreter: Option<AssistantToolCodeInterpreterResources>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub file_search: Option<AssistantToolFileSearchResources>,
 }
 
 #[derive(Clone, Serialize, Debug, Deserialize, PartialEq)]
 pub struct CreateAssistantToolResources {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub code_interpreter: Option<AssistantToolCodeInterpreterResources>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub file_search: Option<CreateAssistantToolFileSearchResources>,
 }
 
 #[derive(Clone, Serialize, Debug, Deserialize, PartialEq, Default)]
 pub struct CreateAssistantToolFileSearchResources {
     ///  The [vector store](https://platform.openai.com/docs/api-reference/vector-stores/object) attached to this assistant. There can be a maximum of 1 vector store attached to the assistant.
-    pub vector_store_ids: Vec<String>,
+    pub vector_store_ids: Option<Vec<String>>,
     /// A helper to create a [vector store](https://platform.openai.com/docs/api-reference/vector-stores/object) with file_ids and attach it to this assistant. There can be a maximum of 1 vector store attached to the assistant.
-    pub vector_stores: Vec<AssistantVectorStore>,
+    pub vector_stores: Option<Vec<AssistantVectorStore>>,
 }
 
 #[derive(Clone, Serialize, Debug, Deserialize, PartialEq, Default)]
 pub struct AssistantVectorStore {
     /// A list of [file](https://platform.openai.com/docs/api-reference/files) IDs to add to the vector store. There can be a maximum of 10000 files in a vector store.
     pub file_ids: Vec<String>,
+
+    /// The chunking strategy used to chunk the file(s). If not set, will use the `auto` strategy.
+    pub chunking_strategy: Option<AssistantVectorStoreChunkingStrategy>,
+
     /// Set of 16 key-value pairs that can be attached to a vector store. This can be useful for storing additional information about the vector store in a structured format. Keys can be a maximum of 64 characters long and values can be a maxium of 512 characters long.
     pub metadata: Option<HashMap<String, serde_json::Value>>,
+}
+
+#[derive(Clone, Serialize, Debug, Deserialize, PartialEq, Default)]
+#[serde(tag = "type")]
+pub enum AssistantVectorStoreChunkingStrategy {
+    /// The default strategy. This strategy currently uses a `max_chunk_size_tokens` of `800` and `chunk_overlap_tokens` of `400`.
+    #[default]
+    #[serde(rename = "auto")]
+    Auto,
+    #[serde(rename = "static")]
+    Static {
+        #[serde(rename = "static")]
+        config: StaticChunkingStrategy,
+    },
+}
+
+/// Static Chunking Strategy
+#[derive(Clone, Serialize, Debug, Deserialize, PartialEq, Default)]
+pub struct StaticChunkingStrategy {
+    /// The maximum number of tokens in each chunk. The default value is `800`. The minimum value is `100` and the maximum value is `4096`.
+    pub max_chunk_size_tokens: u16,
+    /// The number of tokens that overlap between chunks. The default value is `400`.
+    ///
+    /// Note that the overlap must not exceed half of `max_chunk_size_tokens`.
+    pub chunk_overlap_tokens: u16,
 }
 
 /// Represents an `assistant` that can call the model and use tools.
@@ -82,7 +115,9 @@ pub struct AssistantObject {
     pub response_format: Option<AssistantsApiResponseFormatOption>,
 }
 
-/// Specifies the format that the model must output. Compatible with [GPT-4 Turbo](https://platform.openai.com/docs/models/gpt-4-and-gpt-4-turbo) and all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
+/// Specifies the format that the model must output. Compatible with [GPT-4o](https://platform.openai.com/docs/models/gpt-4o), [GPT-4 Turbo](https://platform.openai.com/docs/models/gpt-4-turbo-and-gpt-4), and all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
+///
+/// Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured Outputs which guarantees the model will match your supplied JSON schema. Learn more in the [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
 ///
 /// Setting to `{ "type": "json_object" }` enables JSON mode, which guarantees the message the model generates is valid JSON.
 ///
@@ -92,51 +127,57 @@ pub enum AssistantsApiResponseFormatOption {
     #[default]
     #[serde(rename = "auto")]
     Auto,
-    #[serde(rename = "none")]
-    None,
     #[serde(untagged)]
-    Format(AssistantsApiResponseFormat),
-}
-
-/// An object describing the expected output of the model. If `json_object` only `function` type `tools` are allowed to be passed to the Run. If `text` the model can return text or any value needed.
-#[derive(Clone, Serialize, Debug, Deserialize, PartialEq, Default)]
-pub struct AssistantsApiResponseFormat {
-    /// Must be one of `text` or `json_object`.
-    pub r#type: AssistantsApiResponseFormatType,
-}
-
-#[derive(Clone, Serialize, Debug, Deserialize, PartialEq, Default)]
-#[serde(rename_all = "snake_case")]
-pub enum AssistantsApiResponseFormatType {
-    #[default]
-    Text,
-    JsonObject,
-}
-
-/// Code interpreter tool
-#[derive(Clone, Serialize, Debug, Deserialize, PartialEq)]
-pub struct AssistantToolsCode {
-    pub r#type: String,
+    Format(ResponseFormat),
 }
 
 /// Retrieval tool
-#[derive(Clone, Serialize, Debug, Deserialize, PartialEq)]
+#[derive(Clone, Serialize, Debug, Default, Deserialize, PartialEq)]
 pub struct AssistantToolsFileSearch {
-    /// The type of tool being defined: `file_search`
-    pub r#type: String,
+    /// Overrides for the file search tool.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub file_search: Option<AssistantToolsFileSearchOverrides>,
+}
+
+#[derive(Clone, Serialize, Debug, Deserialize, PartialEq)]
+pub struct AssistantToolsFileSearchOverrides {
+    ///  The maximum number of results the file search tool should output. The default is 20 for gpt-4* models and 5 for gpt-3.5-turbo. This number should be between 1 and 50 inclusive.
+    ///
+    //// Note that the file search tool may output fewer than `max_num_results` results. See the [file search tool documentation](https://platform.openai.com/docs/assistants/tools/file-search/customizing-file-search-settings) for more information.
+    pub max_num_results: Option<u8>,
+    pub ranking_options: Option<FileSearchRankingOptions>,
+}
+
+#[derive(Clone, Serialize, Debug, Deserialize, PartialEq)]
+pub enum FileSearchRanker {
+    #[serde(rename = "auto")]
+    Auto,
+    #[serde(rename = "default_2024_08_21")]
+    Default2024_08_21,
+}
+
+/// The ranking options for the file search.
+///
+/// See the [file search tool documentation](/docs/assistants/tools/file-search/customizing-file-search-settings) for more information.
+#[derive(Clone, Serialize, Debug, Deserialize, PartialEq)]
+pub struct FileSearchRankingOptions {
+    /// The ranker to use for the file search. If not specified will use the `auto` ranker.
+    pub ranker: Option<FileSearchRanker>,
+    /// The score threshold for the file search. All values must be a floating point number between 0 and 1.
+    pub score_threshold: Option<f32>,
 }
 
 /// Function tool
-#[derive(Clone, Serialize, Debug, Deserialize, PartialEq)]
+#[derive(Clone, Serialize, Debug, Default, Deserialize, PartialEq)]
 pub struct AssistantToolsFunction {
-    pub r#type: String,
     pub function: FunctionObject,
 }
 
 #[derive(Clone, Serialize, Debug, Deserialize, PartialEq)]
-#[serde(untagged)]
+#[serde(tag = "type")]
+#[serde(rename_all = "snake_case")]
 pub enum AssistantTools {
-    Code(AssistantToolsCode),
+    CodeInterpreter,
     FileSearch(AssistantToolsFileSearch),
     Function(AssistantToolsFunction),
 }

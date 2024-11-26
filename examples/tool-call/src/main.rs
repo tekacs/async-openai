@@ -19,7 +19,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let user_prompt = "What's the weather like in Boston and Atlanta?";
 
     let request = CreateChatCompletionRequestArgs::default()
-        .max_tokens(512u16)
+        .max_tokens(512u32)
         .model("gpt-4-1106-preview")
         .messages([ChatCompletionRequestUserMessageArgs::default()
             .content(user_prompt)
@@ -52,7 +52,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .create(request)
         .await?
         .choices
-        .get(0)
+        .first()
         .unwrap()
         .message
         .clone();
@@ -110,7 +110,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         messages.extend(tool_messages);
 
         let subsequent_request = CreateChatCompletionRequestArgs::default()
-            .max_tokens(512u16)
+            .max_tokens(512u32)
             .model("gpt-4-1106-preview")
             .messages(messages)
             .build()
@@ -151,7 +151,7 @@ async fn call_fn(name: &str, args: &str) -> Result<Value, Box<dyn std::error::Er
     let unit = function_args["unit"].as_str().unwrap_or("fahrenheit");
     let function = available_functions.get(name).unwrap();
     let function_response = function(location, unit);
-    return Ok(function_response);
+    Ok(function_response)
 }
 
 fn get_current_weather(location: &str, unit: &str) -> serde_json::Value {

@@ -4,7 +4,7 @@ use async_openai::{
     types::{
         ChatCompletionRequestMessageContentPartImageArgs,
         ChatCompletionRequestMessageContentPartTextArgs, ChatCompletionRequestUserMessageArgs,
-        CreateChatCompletionRequestArgs, ImageUrlArgs, ImageUrlDetail,
+        CreateChatCompletionRequestArgs, ImageDetail, ImageUrlArgs,
     },
     Client,
 };
@@ -18,7 +18,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let request = CreateChatCompletionRequestArgs::default()
         .model("gpt-4-vision-preview")
-        .max_tokens(300_u16)
+        .max_tokens(300_u32)
         .messages([ChatCompletionRequestUserMessageArgs::default()
             .content(vec![
                 ChatCompletionRequestMessageContentPartTextArgs::default()
@@ -29,7 +29,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     .image_url(
                         ImageUrlArgs::default()
                             .url(image_url)
-                            .detail(ImageUrlDetail::High)
+                            .detail(ImageDetail::High)
                             .build()?,
                     )
                     .build()?

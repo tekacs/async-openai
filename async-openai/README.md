@@ -23,8 +23,7 @@
 
 - It's based on [OpenAI OpenAPI spec](https://github.com/openai/openai-openapi)
 - Current features:
-  - [x] Assistants v2
-  - [ ] Assistants v2 streaming
+  - [x] Assistants (v2)
   - [x] Audio
   - [x] Batch
   - [x] Chat
@@ -33,15 +32,15 @@
   - [x] Files
   - [x] Fine-Tuning
   - [x] Images
-  - [x] Microsoft Azure OpenAI Service
   - [x] Models
   - [x] Moderations
-  - [x] WASM support (experimental and only available in [`experiments`](https://github.com/64bit/async-openai/tree/experiments) branch)
-- Support SSE streaming on available APIs
-- All requests including form submissions (except SSE streaming) are retried with exponential backoff when [rate limited](https://platform.openai.com/docs/guides/rate-limits) by the API server.
+  - [x] Organizations | Administration
+  - [x] Realtime API types (Beta)
+  - [x] Uploads
+- SSE streaming on available APIs
+- Requests (except SSE streaming) including form submissions are retried with exponential backoff when [rate limited](https://platform.openai.com/docs/guides/rate-limits).
 - Ergonomic builder pattern for all request objects.
-
-**Note on Azure OpenAI Service (AOS)**:  `async-openai` primarily implements OpenAI spec, and doesn't try to maintain parity with spec of AOS.
+- Microsoft Azure OpenAI Service (only for APIs matching OpenAI spec)
 
 ## Usage
 
@@ -60,11 +59,16 @@ $Env:OPENAI_API_KEY='sk-...'
 - Visit [examples](https://github.com/64bit/async-openai/tree/main/examples) directory on how to use `async-openai`.
 - Visit [docs.rs/async-openai](https://docs.rs/async-openai) for docs.
 
+## Realtime API
+
+Only types for Realtime API are implemented, and can be enabled with feature flag `realtime`.
+These types may change if/when OpenAI releases official specs for them.
+
 ## Image Generation Example
 
 ```rust
 use async_openai::{
-    types::{CreateImageRequestArgs, ImageSize, ResponseFormat},
+    types::{CreateImageRequestArgs, ImageSize, ImageResponseFormat},
     Client,
 };
 use std::error::Error;
@@ -77,7 +81,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let request = CreateImageRequestArgs::default()
         .prompt("cats on sofa and carpet in living room")
         .n(2)
-        .response_format(ResponseFormat::Url)
+        .response_format(ImageResponseFormat::Url)
         .size(ImageSize::S256x256)
         .user("async-openai")
         .build()?;
@@ -113,16 +117,18 @@ All forms of contributions, such as new features requests, bug fixes, issues, do
 A good starting point would be to look at existing [open issues](https://github.com/64bit/async-openai/issues).
 
 To maintain quality of the project, a minimum of the following is a must for code contribution:
+
 - **Names & Documentation**: All struct names, field names and doc comments are from OpenAPI spec. Nested objects in spec without names leaves room for making appropriate name.
-- **Tested**:  For changes supporting test(s) and/or example is required. Existing examples, doc tests, unit tests, and integration tests should be made to work with the changes if applicable.
+- **Tested**: For changes supporting test(s) and/or example is required. Existing examples, doc tests, unit tests, and integration tests should be made to work with the changes if applicable.
 - **Scope**: Keep scope limited to APIs available in official documents such as [API Reference](https://platform.openai.com/docs/api-reference) or [OpenAPI spec](https://github.com/openai/openai-openapi/). Other LLMs or AI Providers offer OpenAI-compatible APIs, yet they may not always have full parity. In such cases, the OpenAI spec takes precedence.
 - **Consistency**: Keep code style consistent across all the "APIs" that library exposes; it creates a great developer experience.
 
 This project adheres to [Rust Code of Conduct](https://www.rust-lang.org/policies/code-of-conduct)
 
 ## Complimentary Crates
-- [openai-func-enums](https://github.com/frankfralick/openai-func-enums) provides procedural macros that make it easier to use this library with OpenAI API's tool calling feature. It also provides derive macros you can add to existing [clap](https://github.com/clap-rs/clap) application subcommands for natural language use of command line tools. It also supports openai's [parallel tool calls](https://platform.openai.com/docs/guides/function-calling/parallel-function-calling) and allows you to choose between running multiple tool calls concurrently or own their own OS threads.
 
+- [openai-func-enums](https://github.com/frankfralick/openai-func-enums) provides procedural macros that make it easier to use this library with OpenAI API's tool calling feature. It also provides derive macros you can add to existing [clap](https://github.com/clap-rs/clap) application subcommands for natural language use of command line tools. It also supports openai's [parallel tool calls](https://platform.openai.com/docs/guides/function-calling/parallel-function-calling) and allows you to choose between running multiple tool calls concurrently or own their own OS threads.
+- [async-openai-wasm](https://github.com/ifsheldon/async-openai-wasm) provides WASM support.
 
 ## License
 

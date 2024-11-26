@@ -23,9 +23,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let client = Client::new();
 
+    let model = "gpt-4o-mini";
+
     let request = CreateChatCompletionRequestArgs::default()
-        .max_tokens(512u16)
-        .model("gpt-3.5-turbo-0613")
+        .max_tokens(512u32)
+        .model(model)
         .messages([ChatCompletionRequestUserMessageArgs::default()
             .content("What's the weather like in Boston?")
             .build()?
@@ -53,7 +55,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .create(request)
         .await?
         .choices
-        .get(0)
+        .first()
         .unwrap()
         .message
         .clone();
@@ -85,8 +87,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
         println!("{}", serde_json::to_string(&message).unwrap());
 
         let request = CreateChatCompletionRequestArgs::default()
-            .max_tokens(512u16)
-            .model("gpt-3.5-turbo-0613")
+            .max_tokens(512u32)
+            .model(model)
             .messages(message)
             .build()?;
 

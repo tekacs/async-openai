@@ -6,9 +6,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::error::OpenAIError;
 
-use super::{Choice, CompletionUsage, Prompt, Stop};
+use super::{ChatCompletionStreamOptions, Choice, CompletionUsage, Prompt, Stop};
 
-#[derive(Clone, Serialize, Default, Debug, Builder, PartialEq)]
+#[derive(Clone, Serialize, Deserialize, Default, Debug, Builder, PartialEq)]
 #[builder(name = "CreateCompletionRequestArgs")]
 #[builder(pattern = "mutable")]
 #[builder(setter(into, strip_option), default)]
@@ -33,7 +33,7 @@ pub struct CreateCompletionRequest {
     ///
     /// The token count of your prompt plus `max_tokens` cannot exceed the model's context length. [Example Python code](https://cookbook.openai.com/examples/how_to_count_tokens_with_tiktoken) for counting tokens.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub max_tokens: Option<u16>,
+    pub max_tokens: Option<u32>,
 
     /// What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
     ///
@@ -58,6 +58,9 @@ pub struct CreateCompletionRequest {
     /// as they become available, with the stream terminated by a `data: [DONE]` message.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub stream: Option<bool>, // nullable: true
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub stream_options: Option<ChatCompletionStreamOptions>,
 
     /// Include the log probabilities on the `logprobs` most likely output tokens, as well the chosen tokens. For example, if `logprobs` is 5, the API will return a list of the 5 most likely tokens. The API will always return the `logprob` of the sampled token, so there may be up to `logprobs+1` elements in the response.
     ///

@@ -18,9 +18,11 @@ use serde_json::json;
 async fn main() -> Result<(), Box<dyn Error>> {
     let client = Client::new();
 
+    let model = "gpt-4o-mini";
+
     let request = CreateChatCompletionRequestArgs::default()
-        .max_tokens(512u16)
-        .model("gpt-3.5-turbo-0613")
+        .max_tokens(512u32)
+        .model(model)
         .messages([ChatCompletionRequestUserMessageArgs::default()
             .content("What's the weather like in Boston?")
             .build()?
@@ -56,7 +58,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     if let Some(fn_call) = &chat_choice.delta.function_call {
                         writeln!(lock, "function_call: {:?}", fn_call).unwrap();
                         if let Some(name) = &fn_call.name {
-                            fn_name = name.clone();
+                            fn_name.clone_from(name);
                         }
                         if let Some(args) = &fn_call.arguments {
                             fn_args.push_str(args);
@@ -92,6 +94,7 @@ async fn call_fn(
 
     let function_args: serde_json::Value = args.parse().unwrap();
 
+    let model = "gpt-4o-mini";
     let location = function_args["location"].as_str().unwrap();
     let unit = function_args["unit"].as_str().unwrap_or("fahrenheit");
     let function = available_functions.get(name).unwrap();
@@ -110,8 +113,8 @@ async fn call_fn(
     ];
 
     let request = CreateChatCompletionRequestArgs::default()
-        .max_tokens(512u16)
-        .model("gpt-3.5-turbo-0613")
+        .max_tokens(512u32)
+        .model(model)
         .messages(message)
         .build()?;
 
@@ -134,7 +137,7 @@ async fn call_fn(
         }
         stdout().flush()?;
     }
-    println!("{}", "\n");
+    println!("\n");
     Ok(())
 }
 
